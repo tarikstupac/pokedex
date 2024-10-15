@@ -12,11 +12,11 @@ type cacheEntry struct {
 }
 type Cache struct {
 	cachedMap map[string]cacheEntry
-	mut       sync.Mutex
+	mut       *sync.Mutex
 }
 
 func NewCache(interval time.Duration) *Cache {
-	c := Cache{cachedMap: map[string]cacheEntry{}, mut: sync.Mutex{}}
+	c := Cache{cachedMap: map[string]cacheEntry{}, mut: &sync.Mutex{}}
 	c.reapLoop(interval)
 	return &c
 }

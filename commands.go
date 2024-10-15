@@ -11,12 +11,13 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config, *pokecache.Cache) error
+	callback    func(*config, *string) error
 }
 
 type config struct {
 	Next     string
 	Previous string
+	Cache    *pokecache.Cache
 }
 
 func getAvailableCommands() map[string]cliCommand {
@@ -41,10 +42,15 @@ func getAvailableCommands() map[string]cliCommand {
 			description: "Displays previous 20 locations or errors if there are no previous locations.",
 			callback:    commandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Takes input parameter <area> and displays Pokemon that can be encountered in the area.\n Example usage: explore pastoria-city-area",
+			callback:    commandExplore,
+		},
 	}
 }
 
-func commandHelp(conf *config, cache *pokecache.Cache) error {
+func commandHelp(conf *config, param *string) error {
 	commands := getAvailableCommands()
 	fmt.Println(BLUE, "Welcome to the Pokedex!", RESET)
 	fmt.Println(BLUE, "Usage:", RESET)
@@ -54,16 +60,16 @@ func commandHelp(conf *config, cache *pokecache.Cache) error {
 	return nil
 }
 
-func commandExit(conf *config, cache *pokecache.Cache) error {
+func commandExit(conf *config, param *string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(conf *config, cache *pokecache.Cache) error {
+func commandMap(conf *config, param *string) error {
 	if conf.Next == "" {
 		return fmt.Errorf(BLUE + "error: No more locations to display!" + RESET)
 	}
-	locs, err := pokeapi.GetLocations(conf.Next, cache)
+	locs, err := pokeapi.GetLocations(conf.Next, conf.Cache)
 	if err != nil {
 		return fmt.Errorf("error getting locations: %w", err)
 	}
@@ -84,11 +90,11 @@ func commandMap(conf *config, cache *pokecache.Cache) error {
 	return nil
 }
 
-func commandMapb(conf *config, cache *pokecache.Cache) error {
+func commandMapb(conf *config, param *string) error {
 	if conf.Previous == "" {
 		return fmt.Errorf(BLUE + "Can't go further back" + RESET)
 	}
-	locs, err := pokeapi.GetLocations(conf.Previous, cache)
+	locs, err := pokeapi.GetLocations(conf.Previous, conf.Cache)
 	if err != nil {
 		return fmt.Errorf("error getting locations: %w", err)
 	}
@@ -104,6 +110,22 @@ func commandMapb(conf *config, cache *pokecache.Cache) error {
 		conf.Previous = *locs.Previous
 	} else {
 		conf.Previous = ""
+	}
+	return nil
+}
+
+func commandExplore(conf *config, param *string) error {
+	if param == nil {
+		return fmt.Errorf("error empty value supplied for param")
+	}
+	locDetails, err := pokeapi.GetEncounters(*param, conf.Cache)
+	if err != nil {
+		return fmt.Errorf("error getting encounters: %w", err)
+	}
+	fmt.Println(BLUE, "Exploring ", *param, " area...", RESET)
+	fmt.Println(BLUE, "Found pokemon: ", RESET)
+	for _, val := range locDetails.PokemonEncounters {
+		fmt.Println(BLUE, "- ", val.Pokemon.Name, RESET)
 	}
 	return nil
 }
