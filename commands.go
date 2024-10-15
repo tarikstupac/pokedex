@@ -5,12 +5,13 @@ import (
 	"os"
 
 	"github.com/tarikstupac/pokedex/internal/pokeapi"
+	"github.com/tarikstupac/pokedex/internal/pokecache"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, *pokecache.Cache) error
 }
 
 type config struct {
@@ -43,7 +44,7 @@ func getAvailableCommands() map[string]cliCommand {
 	}
 }
 
-func commandHelp(conf *config) error {
+func commandHelp(conf *config, cache *pokecache.Cache) error {
 	commands := getAvailableCommands()
 	fmt.Println(BLUE, "Welcome to the Pokedex!", RESET)
 	fmt.Println(BLUE, "Usage:", RESET)
@@ -53,16 +54,16 @@ func commandHelp(conf *config) error {
 	return nil
 }
 
-func commandExit(conf *config) error {
+func commandExit(conf *config, cache *pokecache.Cache) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(conf *config) error {
+func commandMap(conf *config, cache *pokecache.Cache) error {
 	if conf.Next == "" {
 		return fmt.Errorf(BLUE + "error: No more locations to display!" + RESET)
 	}
-	locs, err := pokeapi.GetLocations(conf.Next)
+	locs, err := pokeapi.GetLocations(conf.Next, cache)
 	if err != nil {
 		return fmt.Errorf("error getting locations: %w", err)
 	}
@@ -83,11 +84,11 @@ func commandMap(conf *config) error {
 	return nil
 }
 
-func commandMapb(conf *config) error {
+func commandMapb(conf *config, cache *pokecache.Cache) error {
 	if conf.Previous == "" {
 		return fmt.Errorf(BLUE + "Can't go further back" + RESET)
 	}
-	locs, err := pokeapi.GetLocations(conf.Previous)
+	locs, err := pokeapi.GetLocations(conf.Previous, cache)
 	if err != nil {
 		return fmt.Errorf("error getting locations: %w", err)
 	}

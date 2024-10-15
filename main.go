@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/tarikstupac/pokedex/internal/pokecache"
 )
 
 const BLUE = "\033[34m"
@@ -14,6 +17,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	confPtr := &config{Next: "https://pokeapi.co/api/v2/location/", Previous: ""}
 	commands := getAvailableCommands()
+	cache := pokecache.NewCache(30 * time.Second)
 
 	for {
 		fmt.Print(BLUE + "Pokedex> " + RESET)
@@ -21,16 +25,16 @@ func main() {
 		input := scanner.Text()
 		switch input {
 		case "help":
-			commands[input].callback(&config{})
+			commands[input].callback(&config{}, cache)
 		case "exit":
-			commands[input].callback(&config{})
+			commands[input].callback(&config{}, cache)
 		case "map":
-			err := commands[input].callback(confPtr)
+			err := commands[input].callback(confPtr, cache)
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "mapb":
-			err := commands[input].callback(confPtr)
+			err := commands[input].callback(confPtr, cache)
 			if err != nil {
 				fmt.Println(err)
 			}
