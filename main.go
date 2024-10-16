@@ -18,6 +18,7 @@ const GREEN = "\033[32m"
 
 var exploreRegexp, _ = regexp.Compile(`^explore\s[\w-]+$`)
 var catchRegexp, _ = regexp.Compile(`^catch\s[\w]+$`)
+var inspectRegexp, _ = regexp.Compile(`^inspect\s[\w]+$`)
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -54,6 +55,14 @@ func main() {
 				}
 			}
 		case catchRegexp.FindString(input):
+			if input != "" {
+				split := strings.Split(input, " ")
+				err := commands[split[0]].callback(confPtr, &split[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		case inspectRegexp.FindString(input):
 			if input != "" {
 				split := strings.Split(input, " ")
 				err := commands[split[0]].callback(confPtr, &split[1])

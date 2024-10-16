@@ -55,6 +55,11 @@ func getAvailableCommands() map[string]cliCommand {
 			description: "Takes input parameter <pokemon> and attempts to catch it. This action can fail. Example usage: catch pikachu.",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Takes input parameter <pokemon> and attempts to inspect it. You can only inspect pokemon you caught. Example usage: inspect pikachu.",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -158,4 +163,30 @@ func commandCatch(conf *config, param *string) error {
 	}
 
 	return nil
+}
+
+func commandInspect(conf *config, param *string) error {
+	if param == nil {
+		return fmt.Errorf("error empty value supplied for param")
+	}
+	pokemon, ok := conf.Pokedex.Get(*param)
+	if !ok {
+		fmt.Println(BLUE, "you have not caught: ", *param, " or pokemon with that name doesn't exit!", RESET)
+		return nil
+	}
+
+	fmt.Println(BLUE, "Name: ", pokemon.Name, RESET)
+	fmt.Println(BLUE, "Height: ", pokemon.Height, RESET)
+	fmt.Println(BLUE, "Weight: ", pokemon.Weight, RESET)
+	fmt.Println(BLUE, "Stats: ", RESET)
+	for _, stat := range pokemon.Stats {
+		fmt.Println(BLUE, " -", stat.Stat.Name, ": ", stat.BaseStat, RESET)
+	}
+	fmt.Println(BLUE, "Types: ", RESET)
+	for _, t := range pokemon.Types {
+		fmt.Println(BLUE, " -", t.Type.Name, RESET)
+	}
+
+	return nil
+
 }
