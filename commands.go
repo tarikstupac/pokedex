@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/tarikstupac/pokedex/internal/pokeapi"
 	"github.com/tarikstupac/pokedex/internal/pokecache"
+	pokedexdata "github.com/tarikstupac/pokedex/internal/pokedex-data"
 )
 
 type cliCommand struct {
@@ -18,6 +20,7 @@ type config struct {
 	Next     string
 	Previous string
 	Cache    *pokecache.Cache
+	Pokedex  *pokedexdata.Pokedex
 }
 
 func getAvailableCommands() map[string]cliCommand {
@@ -44,8 +47,13 @@ func getAvailableCommands() map[string]cliCommand {
 		},
 		"explore": {
 			name:        "explore",
-			description: "Takes input parameter <area> and displays Pokemon that can be encountered in the area.\n Example usage: explore pastoria-city-area",
+			description: "Takes input parameter <area> and displays Pokemon that can be encountered in the area. Example usage: explore pastoria-city-area",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Takes input parameter <pokemon> and attempts to catch it. This action can fail. Example usage: catch pikachu.",
+			callback:    commandCatch,
 		},
 	}
 }
@@ -127,5 +135,27 @@ func commandExplore(conf *config, param *string) error {
 	for _, val := range locDetails.PokemonEncounters {
 		fmt.Println(BLUE, "- ", val.Pokemon.Name, RESET)
 	}
+	return nil
+}
+
+func commandCatch(conf *config, param *string) error {
+	if param == nil {
+		return fmt.Errorf("error empty value supplied for param")
+	}
+	pokemon, err := pokeapi.GetPokemon(*param)
+	if err != nil {
+		return fmt.Errorf("error getting pokemon: %w", err)
+	}
+
+	fmt.Println(BLUE, "Throwing a pokeball at ", *param, " ...", RESET)
+	catchVal := rand.Intn(pokemon.BaseExperience * 2)
+	if catchVal >= pokemon.BaseExperience {
+		conf.Pokedex.Add(*param, pokemon)
+
+		fmt.Println(BLUE, *param, " was caught!", RESET)
+	} else {
+		fmt.Println(BLUE, *param, " escaped!", RESET)
+	}
+
 	return nil
 }

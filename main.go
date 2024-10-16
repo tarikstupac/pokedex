@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tarikstupac/pokedex/internal/pokecache"
+	pokedexdata "github.com/tarikstupac/pokedex/internal/pokedex-data"
 )
 
 const BLUE = "\033[34m"
@@ -16,11 +17,13 @@ const RESET = "\033[0m"
 const GREEN = "\033[32m"
 
 var exploreRegexp, _ = regexp.Compile(`^explore\s[\w-]+$`)
+var catchRegexp, _ = regexp.Compile(`^catch\s[\w]+$`)
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	cache := pokecache.NewCache(30 * time.Second)
-	confPtr := &config{Next: "https://pokeapi.co/api/v2/location-area/", Previous: "", Cache: cache}
+	pokedex := pokedexdata.NewPokedex()
+	confPtr := &config{Next: "https://pokeapi.co/api/v2/location-area/", Previous: "", Cache: cache, Pokedex: pokedex}
 	commands := getAvailableCommands()
 
 	for {
@@ -43,6 +46,14 @@ func main() {
 				fmt.Println(err)
 			}
 		case exploreRegexp.FindString(input):
+			if input != "" {
+				split := strings.Split(input, " ")
+				err := commands[split[0]].callback(confPtr, &split[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		case catchRegexp.FindString(input):
 			if input != "" {
 				split := strings.Split(input, " ")
 				err := commands[split[0]].callback(confPtr, &split[1])
