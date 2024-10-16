@@ -70,6 +70,11 @@ func main() {
 					fmt.Println(err)
 				}
 			}
+		case "pokedex":
+			err := commands[input].callback(confPtr, nil)
+			if err != nil {
+				fmt.Println(err)
+			}
 		default:
 			fmt.Printf("%v Command %v unknown, type help for list of commands %v \n", BLUE, input, RESET)
 		}

@@ -69,8 +69,16 @@ func GetEncounters(param string, cache *pokecache.Cache) (LocationDetailResponse
 	return locationDetailRes, nil
 }
 
-func GetPokemon(param string) (Pokemon, error) {
+func GetPokemon(param string, cache *pokecache.Cache) (Pokemon, error) {
+	var pokemonRes Pokemon
 	url := "https://pokeapi.co/api/v2/pokemon/" + param
+	data, ok := cache.Get(url)
+	if ok {
+		if err := json.Unmarshal(data, &pokemonRes); err != nil {
+			return Pokemon{}, fmt.Errorf("error parsing data from cache: %w", err)
+		}
+		return pokemonRes, nil
+	}
 
 	res, err := http.Get(url)
 
@@ -82,11 +90,13 @@ func GetPokemon(param string) (Pokemon, error) {
 		return Pokemon{}, fmt.Errorf("no data found for pokemon: %v", param)
 	}
 	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
+	data, err = io.ReadAll(res.Body)
 	if err != nil {
 		return Pokemon{}, fmt.Errorf("error reading data from response body: %w", err)
 	}
-	var pokemonRes Pokemon
+	if err = cache.Add(url, data); err != nil {
+		return Pokemon{}, fmt.Errorf("error adding data to cache: %w", err)
+	}
 	if err = json.Unmarshal(data, &pokemonRes); err != nil {
 		return Pokemon{}, fmt.Errorf("error parsing data to json: %w", err)
 	}

@@ -24,3 +24,7 @@ func (p *Pokedex) Get(key string) (pokeapi.Pokemon, bool) {
 	}
 	return entry, ok
 }
+
+func (p *Pokedex) GetCaughtPokemon() map[string]pokeapi.Pokemon {
+	return p.pokemonCaught
+}

@@ -60,6 +60,11 @@ func getAvailableCommands() map[string]cliCommand {
 			description: "Takes input parameter <pokemon> and attempts to inspect it. You can only inspect pokemon you caught. Example usage: inspect pikachu.",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Displays all the pokemon you've caught so far.",
+			callback:    commandPokedex,
+		},
 	}
 }
 
@@ -147,7 +152,7 @@ func commandCatch(conf *config, param *string) error {
 	if param == nil {
 		return fmt.Errorf("error empty value supplied for param")
 	}
-	pokemon, err := pokeapi.GetPokemon(*param)
+	pokemon, err := pokeapi.GetPokemon(*param, conf.Cache)
 	if err != nil {
 		return fmt.Errorf("error getting pokemon: %w", err)
 	}
@@ -189,4 +194,17 @@ func commandInspect(conf *config, param *string) error {
 
 	return nil
 
+}
+
+func commandPokedex(conf *config, param *string) error {
+	caughtPokemon := conf.Pokedex.GetCaughtPokemon()
+	if len(caughtPokemon) == 0 {
+		fmt.Println(BLUE, "You haven't caught any pokemon yet, type help to explore and catch some pokemon!", RESET)
+		return nil
+	}
+	fmt.Println(BLUE, "Your Pokedex: ", RESET)
+	for key := range caughtPokemon {
+		fmt.Println(BLUE, " -", key, RESET)
+	}
+	return nil
 }
